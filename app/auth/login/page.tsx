@@ -2,29 +2,31 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '../contexts/AuthContext'
 import { Mail, Lock, LogIn } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError('')
 
-    // Demo Login - später mit echter API
-    setTimeout(() => {
-      if (email && password) {
-        // Erfolgreicher Login
-        alert('Login erfolgreich! Weiter zum Dashboard...')
-        router.push('/dashboard')
-      } else {
-        alert('Bitte Email und Passwort eingeben')
-      }
-      setIsLoading(false)
-    }, 1000)
+    const result = await login(email, password)
+    
+    if (result.success) {
+      router.push('/dashboard')
+    } else {
+      setError(result.message || 'Login fehlgeschlagen')
+    }
+    
+    setIsLoading(false)
   }
 
   return (
@@ -43,6 +45,12 @@ export default function LoginPage() {
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+          
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">Email</label>
@@ -95,13 +103,12 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Demo Accounts */}
-          <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-yellow-800 mb-2">Demo Accounts:</h3>
-            <div className="text-xs text-yellow-700 space-y-1">
-              <div>Manager: manager@company.com / manager123</div>
-              <div>Admin: admin@company.com / admin123</div>
-              <div>User: user@company.com / user123</div>
+          {/* Demo Accounts Info */}
+          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-blue-800 mb-2">Demo Login (für Test):</h3>
+            <div className="text-xs text-blue-700 space-y-1">
+              <div>Verwende: demo@company.com / demo123</div>
+              <div className="text-blue-600 mt-2"> Echte MongoDB Integration ist aktiv!</div>
             </div>
           </div>
         </form>
