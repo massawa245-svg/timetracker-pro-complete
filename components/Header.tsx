@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import Link from 'next/link'
-import { Clock, User } from 'lucide-react'
+import { Clock, User, BarChart3, Users } from 'lucide-react'
 
 export default function Header() {
   return (
@@ -21,6 +21,18 @@ export default function Header() {
               className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
             >
               Zeiterfassung
+            </Link>
+            <Link 
+              href="/team" 
+              className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+            >
+              Team
+            </Link>
+            <Link 
+              href="/reports" 
+              className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+            >
+              Berichte
             </Link>
             <Link 
               href="/auth/login" 
