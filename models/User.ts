@@ -1,6 +1,16 @@
-﻿const mongoose = require('mongoose');
+﻿import mongoose, { Document, Model, Schema } from 'mongoose';
 
-const userSchema = new mongoose.Schema({
+export interface IUser extends Document {
+  name: string;
+  email: string;
+  password: string;
+  role: 'user' | 'manager' | 'admin';
+  isActive: boolean;
+  comparePassword(candidatePassword: string): Promise<boolean>;
+  toJSON(): any;
+}
+
+const userSchema: Schema<IUser> = new Schema({
   name: {
     type: String,
     required: true
@@ -28,7 +38,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // Einfache comparePassword Methode für Entwicklung
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
   return this.password === candidatePassword;
 };
 
@@ -39,4 +49,4 @@ userSchema.methods.toJSON = function() {
   return user;
 };
 
-module.exports = mongoose.models.User || mongoose.model('User', userSchema);
+export const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', userSchema);

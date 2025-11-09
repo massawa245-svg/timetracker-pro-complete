@@ -1,18 +1,23 @@
 ﻿import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
-import User from '@/models/User';
+import { User } from '@/models/User';
 
 // MongoDB verbinden
-async function connectDB() {
+async function connectDB(): Promise<void> {
   if (mongoose.connections[0].readyState) return;
   await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/timetracker-pro');
 }
 
-export async function POST(request) {
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     await connectDB();
     
-    const { email, password } = await request.json();
+    const { email, password }: LoginRequest = await request.json();
     
     if (!email || !password) {
       return NextResponse.json(

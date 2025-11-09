@@ -1,14 +1,19 @@
 ﻿import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
-import TimerSession from '@/models/TimerSession';
+import { TimerSession } from '@/models/TimerSession';
 
-async function connectDB() {
+async function connectDB(): Promise<void> {
   if (mongoose.connections[0].readyState) return;
   await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/timetracker-pro');
 }
 
-// Timer Sessions abrufen
-export async function GET(request) {
+interface TimerSessionRequest {
+  userId: string;
+  project: string;
+  description?: string;
+}
+
+export async function GET(request: Request): Promise<NextResponse> {
   try {
     await connectDB();
     
@@ -17,7 +22,7 @@ export async function GET(request) {
     
     let query = {};
     if (userId) {
-      query.userId = userId;
+      query = { userId };
     }
     
     const sessions = await TimerSession.find(query)
@@ -31,18 +36,17 @@ export async function GET(request) {
     
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: (error as Error).message },
       { status: 500 }
     );
   }
 }
 
-// Neue Timer Session starten
-export async function POST(request) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     await connectDB();
     
-    const body = await request.json();
+    const body: TimerSessionRequest = await request.json();
     const { userId, project, description } = body;
     
     if (!userId || !project) {
@@ -56,7 +60,7 @@ export async function POST(request) {
     const newSession = new TimerSession({
       userId,
       project,
-      description,
+      description: description || '',
       startTime: new Date(),
       status: 'running'
     });
@@ -71,7 +75,7 @@ export async function POST(request) {
     
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: (error as Error).message },
       { status: 500 }
     );
   }

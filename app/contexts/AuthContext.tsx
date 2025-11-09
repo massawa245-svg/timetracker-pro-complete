@@ -1,11 +1,28 @@
 ﻿"use client"
 
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
-const AuthContext = createContext()
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
+interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  logout: () => void;
+  loading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -16,7 +33,7 @@ export function AuthProvider({ children }) {
     setLoading(false)
   }, [])
 
-  const login = async (email, password) => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -40,7 +57,7 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const logout = () => {
+  const logout = (): void => {
     setUser(null)
     localStorage.removeItem('user')
   }
@@ -52,7 +69,7 @@ export function AuthProvider({ children }) {
   )
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext)
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider')
