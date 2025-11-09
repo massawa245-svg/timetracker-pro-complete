@@ -1,6 +1,6 @@
 ﻿import Header from "../components/Header";
 import "./globals.css";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider } from "../contexts/AuthContext";
 
 export const metadata = {
   title: "TimeTracker Pro",
