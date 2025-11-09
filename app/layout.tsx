@@ -1,4 +1,6 @@
-﻿export const metadata = {
+﻿import Header from "@/components/Header";
+
+export const metadata = {
   title: "TimeTracker Pro",
   description: "Professional Time Tracking App",
 };
@@ -10,7 +12,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de">
-      <body>{children}</body>
+      <body className="min-h-screen bg-gray-50">
+        <Header />
+        {children}
+      </body>
     </html>
   );
 }
