@@ -82,16 +82,23 @@ export default function SchedulePage() {
   }
 
   const formatTime = (time: string) => {
-    if (time === '00:00') return '12:00 AM'
-    const [hours, minutes] = time.split(':')
-    const hourNum = parseInt(hours)
-    const period = hourNum >= 12 ? 'PM' : 'AM'
-    const displayHour = hourNum % 12 || 12
-    return `${displayHour}:${minutes} ${period}`
+    // ✅ SICHERER UMGANG MIT UNDEFINED/NULL WERTEN
+    if (!time || time === '00:00' || time === '00:00:00') return '12:00 AM'
+    
+    try {
+      const [hours, minutes] = time.split(':')
+      const hourNum = parseInt(hours)
+      const period = hourNum >= 12 ? 'PM' : 'AM'
+      const displayHour = hourNum % 12 || 12
+      return `${displayHour}:${minutes} ${period}`
+    } catch (error) {
+      console.warn(' Error formatting time:', time, error)
+      return '--:--'
+    }
   }
 
   const formatPause = (minutes: number) => {
-    if (minutes === 0) return '0 min'
+    if (!minutes || minutes === 0) return '0 min'
     return `${minutes} min`
   }
 
@@ -105,7 +112,7 @@ export default function SchedulePage() {
     sunday: 'Sonntag'
   }
 
-  // ✅ LOADING STATE
+  //  LOADING STATE
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 py-8">
@@ -120,7 +127,7 @@ export default function SchedulePage() {
     )
   }
 
-  // ✅ ERROR STATE
+  //  ERROR STATE
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 py-8">
@@ -168,6 +175,17 @@ export default function SchedulePage() {
     )
   }
 
+  //  SICHERER ZUGRIFF AUF WEEKLY PLAN DATEN
+  const safeWeeklyPlan = weeklyPlan.weeklyPlan || {
+    monday: { start: '00:00', end: '00:00', pause: 0, hours: 0, enabled: false },
+    tuesday: { start: '00:00', end: '00:00', pause: 0, hours: 0, enabled: false },
+    wednesday: { start: '00:00', end: '00:00', pause: 0, hours: 0, enabled: false },
+    thursday: { start: '00:00', end: '00:00', pause: 0, hours: 0, enabled: false },
+    friday: { start: '00:00', end: '00:00', pause: 0, hours: 0, enabled: false },
+    saturday: { start: '00:00', end: '00:00', pause: 0, hours: 0, enabled: false },
+    sunday: { start: '00:00', end: '00:00', pause: 0, hours: 0, enabled: false }
+  }
+
   //  WOCHENPLAN VERFÜGBAR
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 py-8">
@@ -199,8 +217,8 @@ export default function SchedulePage() {
 
           {/* Tage Grid */}
           <div className="space-y-4 mb-8">
-            {(Object.keys(weeklyPlan.weeklyPlan) as Array<keyof WeeklyPlanData>).map((day) => {
-              const dayPlan = weeklyPlan.weeklyPlan[day]
+            {(Object.keys(safeWeeklyPlan) as Array<keyof WeeklyPlanData>).map((day) => {
+              const dayPlan = safeWeeklyPlan[day]
               if (!dayPlan) return null
               
               return (
@@ -262,14 +280,14 @@ export default function SchedulePage() {
                         ? 'bg-green-50 border-green-200 text-green-700' 
                         : 'bg-gray-100 border-gray-200 text-gray-500'
                     }`}>
-                      {dayPlan.hours}h
+                      {dayPlan.hours || 0}h
                     </div>
                   </div>
 
                   {/* Tagessumme */}
                   <div className="flex items-center justify-center">
                     <span className={`font-semibold ${dayPlan.enabled ? 'text-gray-900' : 'text-gray-500'}`}>
-                      {dayPlan.enabled ? `${dayPlan.hours}h` : '-'}
+                      {dayPlan.enabled ? `${dayPlan.hours || 0}h` : '-'}
                     </span>
                   </div>
                 </div>

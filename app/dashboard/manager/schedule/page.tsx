@@ -46,14 +46,22 @@ export default function ManagerSchedulePage() {
   }
 
   const calculateHours = (start: string, end: string, pause: number): number => {
-    const [startHour, startMinute] = start.split(':').map(Number)
-    const [endHour, endMinute] = end.split(':').map(Number)
+    //  SICHERER UMGANG MIT ZEIT-WERTEN
+    if (!start || !end || start === '00:00' || end === '00:00') return 0
     
-    const startTotal = startHour * 60 + startMinute
-    const endTotal = endHour * 60 + endMinute
-    const totalMinutes = endTotal - startTotal - pause
-    
-    return Math.round((totalMinutes / 60) * 100) / 100
+    try {
+      const [startHour, startMinute] = start.split(':').map(Number)
+      const [endHour, endMinute] = end.split(':').map(Number)
+      
+      const startTotal = startHour * 60 + startMinute
+      const endTotal = endHour * 60 + endMinute
+      const totalMinutes = endTotal - startTotal - pause
+      
+      return Math.round((totalMinutes / 60) * 100) / 100
+    } catch (error) {
+      console.warn(' Error calculating hours:', { start, end, pause }, error)
+      return 0
+    }
   }
 
   const updateDayPlan = (day: keyof WeeklyPlanData, field: keyof DayPlan, value: any) => {
@@ -98,6 +106,22 @@ export default function ManagerSchedulePage() {
     return Object.values(weeklyPlan).filter(day => day.enabled).length
   }
 
+  const formatTime = (time: string) => {
+    // ✅ SICHERER UMGANG MIT UNDEFINED/NULL WERTEN
+    if (!time || time === '00:00' || time === '00:00:00') return '12:00 AM'
+    
+    try {
+      const [hours, minutes] = time.split(':')
+      const hourNum = parseInt(hours)
+      const period = hourNum >= 12 ? 'PM' : 'AM'
+      const displayHour = hourNum % 12 || 12
+      return `${displayHour}:${minutes} ${period}`
+    } catch (error) {
+      console.warn(' Error formatting time:', time, error)
+      return '--:--'
+    }
+  }
+
   const publishWeeklyPlan = async () => {
     setIsLoading(true)
     setMessage('')
@@ -121,19 +145,19 @@ export default function ManagerSchedulePage() {
       const data = await response.json()
       
       if (data.success) {
-        setMessage('✅ Wochenplan erfolgreich veröffentlicht!')
+        setMessage(' Wochenplan erfolgreich veröffentlicht!')
       } else {
-        setMessage('❌ Fehler: ' + (data.error || 'Unbekannter Fehler'))
+        setMessage(' Fehler: ' + (data.error || 'Unbekannter Fehler'))
       }
     } catch (error) {
-      setMessage('❌ Netzwerkfehler beim Veröffentlichen')
+      setMessage(' Netzwerkfehler beim Veröffentlichen')
     } finally {
       setIsLoading(false)
     }
   }
 
   const saveDraft = () => {
-    setMessage('💾 Entwurf gespeichert (lokal)')
+    setMessage(' Entwurf gespeichert (lokal)')
     // Hier könnte man den Entwurf in localStorage speichern
   }
 
