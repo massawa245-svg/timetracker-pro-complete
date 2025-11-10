@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
-import WorkSchedule from '@/models/WorkSchedule';
+import { WorkSchedule } from '@/models/WorkSchedule';
 
 // MongoDB Connection
 async function connectDB(): Promise<void> {
@@ -22,7 +22,7 @@ export async function GET(): Promise<NextResponse> {
   try {
     await connectDB();
     
-    console.log('🔍 GET Weekly Plan - Searching for published plan...');
+    console.log(' GET Weekly Plan - Searching for published plan...');
     
     // Finde den zuletzt veröffentlichten Wochenplan
     const weeklyPlan = await WorkSchedule.findOne({
@@ -32,7 +32,7 @@ export async function GET(): Promise<NextResponse> {
     .sort({ publishedAt: -1 })
     .select('weeklyPlan publishedAt publishedBy');
 
-    console.log('📊 Weekly Plan found:', !!weeklyPlan);
+    console.log(' Weekly Plan found:', !!weeklyPlan);
 
     if (!weeklyPlan) {
       return NextResponse.json({ 
@@ -103,7 +103,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       publishedAt: new Date()
     });
 
-    console.log('✅ New weekly plan created:', newWeeklyPlan._id);
+    console.log(' New weekly plan created:', newWeeklyPlan._id);
 
     return NextResponse.json({ 
       success: true, 
@@ -112,7 +112,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     });
     
   } catch (error: any) {
-    console.error('❌ Weekly plan creation error:', error);
+    console.error(' Weekly plan creation error:', error);
     return NextResponse.json({ 
       success: false,
       error: 'Internal server error',

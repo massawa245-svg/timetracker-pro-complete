@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Clock, BarChart3, Users, Timer, Menu, X, User, LogOut, Calendar } from 'lucide-react'
+import { Clock, BarChart3, Users, Timer, Menu, X, User, LogOut, Calendar, Crown } from 'lucide-react'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -14,6 +14,10 @@ export default function Header() {
     { name: 'Zeiterfassung', href: '/timer', icon: Timer },
     { name: 'Team', href: '/team', icon: Users },
     { name: 'Wochenplan', href: '/schedule', icon: Calendar },
+  ]
+
+  const managerNavigation = [
+    { name: 'Manager', href: '/dashboard/manager', icon: Crown, badge: 'Admin' },
   ]
 
   const isActive = (path: string) => pathname === path
@@ -51,6 +55,30 @@ export default function Header() {
                 >
                   <Icon className="h-5 w-5" />
                   <span>{item.name}</span>
+                </Link>
+              )
+            })}
+            
+            {/* Manager Links */}
+            {managerNavigation.map((item) => {
+              const Icon = item.icon
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`flex items-center space-x-2 px-4 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                    isActive(item.href)
+                      ? 'bg-purple-50 text-purple-600 border border-purple-200 shadow-sm'
+                      : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{item.name}</span>
+                  {item.badge && (
+                    <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               )
             })}
@@ -103,6 +131,36 @@ export default function Header() {
                   </Link>
                 )
               })}
+              
+              {/* Manager Mobile Links */}
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Manager Bereich
+                </div>
+                {managerNavigation.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                        isActive(item.href)
+                          ? 'bg-purple-50 text-purple-600 border border-purple-200'
+                          : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span>{item.name}</span>
+                      {item.badge && (
+                        <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  )
+                })}
+              </div>
               
               <div className="pt-4 space-y-2">
                 <Link

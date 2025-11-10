@@ -116,4 +116,5 @@ const workScheduleSchema: Schema<IWorkSchedule> = new Schema({
 workScheduleSchema.index({ isWeeklyPlan: 1, planPublished: 1 });
 workScheduleSchema.index({ publishedAt: -1 });
 
+// Named Export statt Default Export
 export const WorkSchedule: Model<IWorkSchedule> = mongoose.models.WorkSchedule || mongoose.model<IWorkSchedule>('WorkSchedule', workScheduleSchema);

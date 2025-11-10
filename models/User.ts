@@ -6,19 +6,24 @@ export interface IUser extends Document {
   password: string;
   role: 'user' | 'manager' | 'admin';
   isActive: boolean;
-  comparePassword(candidatePassword: string): Promise<boolean>;
-  toJSON(): any;
+  department?: string;
+  position?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const userSchema: Schema<IUser> = new Schema({
   name: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   email: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    trim: true,
+    lowercase: true
   },
   password: {
     type: String,
@@ -32,6 +37,14 @@ const userSchema: Schema<IUser> = new Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  department: {
+    type: String,
+    default: 'Allgemein'
+  },
+  position: {
+    type: String,
+    default: 'Mitarbeiter'
   }
 }, {
   timestamps: true
