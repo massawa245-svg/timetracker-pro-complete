@@ -7,31 +7,34 @@ async function connectDB(): Promise<void> {
   await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/timetracker-pro');
 }
 
-interface TimerSessionRequest {
-  userId: string;
-  project: string;
-  description?: string;
-}
-
-export async function GET(request: Request): Promise<NextResponse> {
+// Timer Session beenden
+export async function PUT(request: Request): Promise<NextResponse> {
   try {
     await connectDB();
     
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const { sessionId } = await request.json();
     
-    let query = {};
-    if (userId) {
-      query = { userId };
+    if (!sessionId) {
+      return NextResponse.json(
+        { success: false, error: 'SessionId ist erforderlich' },
+        { status: 400 }
+      );
     }
     
-    const sessions = await TimerSession.find(query)
-      .populate('userId', 'name email role')
-      .sort({ startTime: -1 });
+    const session = await TimerSession.findById(sessionId);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: 'Session nicht gefunden' },
+        { status: 404 }
+      );
+    }
     
-    return NextResponse.json({ 
-      success: true, 
-      sessions 
+    await session.completeSession();
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Timer gestoppt und gespeichert',
+      session
     });
     
   } catch (error) {
@@ -42,35 +45,39 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 }
 
-export async function POST(request: Request): Promise<NextResponse> {
+// Laufende Session für User finden
+export async function GET(request: Request): Promise<NextResponse> {
   try {
     await connectDB();
     
-    const body: TimerSessionRequest = await request.json();
-    const { userId, project, description } = body;
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
     
-    if (!userId || !project) {
+    if (!userId) {
       return NextResponse.json(
-        { success: false, error: 'UserId und Project sind erforderlich' },
+        { success: false, error: 'UserId ist erforderlich' },
         { status: 400 }
       );
     }
     
-    // Neue Session erstellen
-    const newSession = new TimerSession({
-      userId,
-      project,
-      description: description || '',
-      startTime: new Date(),
-      status: 'running'
+    // Laufende Session finden
+    const runningSession = await TimerSession.findOne({ 
+      userId, 
+      status: 'running' 
     });
     
-    await newSession.save();
+    // Vergangene Sessions
+    const pastSessions = await TimerSession.find({ 
+      userId, 
+      status: 'completed' 
+    })
+    .sort({ startTime: -1 })
+    .limit(10);
     
-    return NextResponse.json({
-      success: true,
-      message: 'Timer gestartet',
-      session: newSession
+    return NextResponse.json({ 
+      success: true, 
+      runningSession,
+      pastSessions 
     });
     
   } catch (error) {
