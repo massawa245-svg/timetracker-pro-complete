@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useState, useEffect, useRef } from 'react'
-import { Play, Pause, Square, Clock, Folder, Save } from 'lucide-react'
+import { Play, Pause, Square, Clock, Folder, Save, Database, WifiOff } from 'lucide-react'
 
 interface TimerSession {
   _id: string;
@@ -20,6 +20,7 @@ export default function TimerPage() {
   const [currentSession, setCurrentSession] = useState<TimerSession | null>(null)
   const [sessions, setSessions] = useState<TimerSession[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [useDemoMode, setUseDemoMode] = useState(false)
   const intervalRef = useRef<NodeJS.Timeout>()
 
   const projects = [
@@ -30,11 +31,6 @@ export default function TimerPage() {
     'Bug Fixing',
     'Projektplanung'
   ]
-
-  // Lade vorhandene Sessions
-  useEffect(() => {
-    loadSessions()
-  }, [])
 
   // Timer Logic
   useEffect(() => {
@@ -57,7 +53,6 @@ export default function TimerPage() {
 
   const loadSessions = async () => {
     try {
-      // Demo: Für echte Implementation userId von AuthContext verwenden
       const response = await fetch('/api/timer?userId=demo-user-id')
       const data = await response.json()
       
@@ -65,16 +60,17 @@ export default function TimerPage() {
         if (data.runningSession) {
           setCurrentSession(data.runningSession)
           setIsRunning(true)
-          // Berechne vergangene Zeit von laufender Session
           const startTime = new Date(data.runningSession.startTime)
           const now = new Date()
           const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000)
           setTime(elapsedSeconds)
         }
         setSessions(data.pastSessions || [])
+        setUseDemoMode(false)
       }
     } catch (error) {
       console.error('Fehler beim Laden der Sessions:', error)
+      setUseDemoMode(true)
     }
   }
 
@@ -92,7 +88,7 @@ export default function TimerPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          userId: 'demo-user-id', // Für Demo - später von AuthContext
+          userId: 'demo-user-id',
           project, 
           description 
         }),
@@ -104,50 +100,88 @@ export default function TimerPage() {
         setCurrentSession(data.session)
         setIsRunning(true)
         setTime(0)
+        setUseDemoMode(false)
       } else {
-        alert('Fehler beim Starten des Timers: ' + data.error)
+        // Fallback zu Demo Mode
+        setUseDemoMode(true)
+        startDemoTimer()
       }
     } catch (error) {
-      alert('Netzwerk Fehler beim Starten des Timers')
+      // Fallback zu Demo Mode bei Netzwerk Fehler
+      setUseDemoMode(true)
+      startDemoTimer()
     }
     setIsLoading(false)
+  }
+
+  const startDemoTimer = () => {
+    const demoSession: TimerSession = {
+      _id: 'demo-' + Date.now(),
+      project,
+      description,
+      startTime: new Date().toISOString(),
+      duration: 0,
+      status: 'running'
+    }
+    setCurrentSession(demoSession)
+    setIsRunning(true)
+    setTime(0)
+    alert('Demo-Modus: Timer läuft lokal (keine Datenbank)')
   }
 
   const stopTimer = async () => {
     if (!currentSession) return
 
     setIsLoading(true)
-    try {
-      const response = await fetch('/api/timer', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ sessionId: currentSession._id }),
-      })
-
-      const data = await response.json()
-      
-      if (data.success) {
-        setCurrentSession(null)
-        setIsRunning(false)
-        setTime(0)
-        setProject('')
-        setDescription('')
-        loadSessions() // Sessions neu laden
-        alert('Timer erfolgreich gespeichert!')
-      } else {
-        alert('Fehler beim Stoppen des Timers: ' + data.error)
+    
+    if (useDemoMode) {
+      // Demo Mode: Lokal speichern
+      const completedSession = {
+        ...currentSession,
+        duration: time,
+        status: 'completed',
+        endTime: new Date().toISOString()
       }
-    } catch (error) {
-      alert('Netzwerk Fehler beim Stoppen des Timers')
+      setSessions(prev => [completedSession, ...prev])
+      setCurrentSession(null)
+      setIsRunning(false)
+      setTime(0)
+      setProject('')
+      setDescription('')
+      alert('Demo: Timer lokal gespeichert')
+    } else {
+      try {
+        const response = await fetch('/api/timer', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sessionId: currentSession._id }),
+        })
+
+        const data = await response.json()
+        
+        if (data.success) {
+          setCurrentSession(null)
+          setIsRunning(false)
+          setTime(0)
+          setProject('')
+          setDescription('')
+          loadSessions()
+          alert('Timer erfolgreich gespeichert!')
+        } else {
+          alert('Fehler beim Stoppen: ' + data.error)
+        }
+      } catch (error) {
+        alert('Netzwerk Fehler. Wechsle zu Demo-Modus.')
+        setUseDemoMode(true)
+      }
     }
     setIsLoading(false)
   }
 
   const pauseTimer = () => {
     setIsRunning(false)
-    // Für echte Implementation: Session pausieren in DB
   }
 
   const formatTime = (seconds: number) => {
@@ -175,6 +209,21 @@ export default function TimerPage() {
           <p className="text-gray-600">Erfassen und verwalten Sie Ihre Arbeitszeit</p>
         </div>
 
+        {/* Connection Status */}
+        {useDemoMode && (
+          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <WifiOff className="h-5 w-5 text-yellow-600" />
+              <div>
+                <h3 className="font-semibold text-yellow-800">Demo-Modus aktiv</h3>
+                <p className="text-yellow-700 text-sm">
+                  Timer läuft lokal. Daten werden nicht in der Datenbank gespeichert.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Timer Card */}
           <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
@@ -184,7 +233,7 @@ export default function TimerPage() {
               </div>
               <div className="text-sm text-gray-500">
                 {isRunning ? `Aktives Projekt: ${project}` : 'Timer bereit'}
-                {currentSession && ` (Session: ${currentSession._id.slice(-6)})`}
+                {currentSession && ` (${useDemoMode ? 'Demo' : 'DB'})`}
               </div>
             </div>
 
@@ -263,6 +312,7 @@ export default function TimerPage() {
             <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <Save className="h-5 w-5" />
               Letzte Timer-Sessions
+              {useDemoMode && <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Demo</span>}
             </h2>
             
             {sessions.length === 0 ? (
@@ -303,10 +353,12 @@ export default function TimerPage() {
 
         {/* Info Box */}
         <div className="mt-8 bg-blue-50 rounded-xl p-6 border border-blue-200">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">Echte Timer-Funktionalität</h3>
+          <h3 className="text-lg font-semibold text-blue-900 mb-2">Timer-Funktionalität</h3>
           <p className="text-blue-700">
-            Der Timer speichert jetzt Sessions in MongoDB! Jede gestartete Timer-Session wird 
-            persistent gespeichert und kann später in Reports ausgewertet werden.
+            {useDemoMode 
+              ? 'Demo-Modus: Timer läuft lokal. Perfekt zum Testen ohne Datenbank!'
+              : 'Datenbank-Modus: Sessions werden in MongoDB gespeichert.'
+            }
           </p>
         </div>
       </div>
