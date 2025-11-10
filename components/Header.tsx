@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Clock, BarChart3, Users, Timer, Menu, X, User, LogOut } from 'lucide-react'
+import { Clock, BarChart3, Users, Timer, Menu, X, User, LogOut, Calendar } from 'lucide-react'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -13,6 +13,7 @@ export default function Header() {
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
     { name: 'Zeiterfassung', href: '/timer', icon: Timer },
     { name: 'Team', href: '/team', icon: Users },
+    { name: 'Wochenplan', href: '/schedule', icon: Calendar },
   ]
 
   const isActive = (path: string) => pathname === path
