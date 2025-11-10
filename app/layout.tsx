@@ -1,9 +1,10 @@
 ﻿import Header from "../components/Header";
+import Footer from "../components/Footer";
 import "./globals.css";
 
 export const metadata = {
-  title: "TimeTracker Pro",
-  description: "Professional Time Tracking App",
+  title: "TimeTracker Pro - Professionelle Zeiterfassung",
+  description: "Die professionelle Lösung für Ihre Zeiterfassung. Einfach, intuitiv und leistungsstark.",
 };
 
 export default function RootLayout({
@@ -13,9 +14,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de">
-      <body className="min-h-screen bg-gray-50">
+      <body className="min-h-screen bg-gray-50 flex flex-col">
         <Header />
-        {children}
+        <main className="flex-1">
+          {children}
+        </main>
+        <Footer />
       </body>
     </html>
   );
