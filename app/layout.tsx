@@ -1,6 +1,5 @@
 ﻿import Header from "../components/Header";
 import "./globals.css";
-import { AuthProvider } from "../contexts/AuthContext";
 
 export const metadata = {
   title: "TimeTracker Pro",
@@ -15,10 +14,8 @@ export default function RootLayout({
   return (
     <html lang="de">
       <body className="min-h-screen bg-gray-50">
-        <AuthProvider>
-          <Header />
-          {children}
-        </AuthProvider>
+        <Header />
+        {children}
       </body>
     </html>
   );

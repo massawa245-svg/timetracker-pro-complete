@@ -2,12 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '../../contexts/AuthContext'
 import { Mail, Lock, LogIn } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -18,15 +16,16 @@ export default function LoginPage() {
     setIsLoading(true)
     setError('')
 
-    const result = await login(email, password)
-    
-    if (result.success) {
-      router.push('/dashboard')
-    } else {
-      setError(result.message || 'Login fehlgeschlagen')
-    }
-    
-    setIsLoading(false)
+    // Demo Login ohne echte API
+    setTimeout(() => {
+      if (email && password) {
+        alert('Login erfolgreich! (Demo)')
+        router.push('/dashboard')
+      } else {
+        setError('Bitte Email und Passwort eingeben')
+      }
+      setIsLoading(false)
+    }, 1000)
   }
 
   return (
@@ -101,15 +100,6 @@ export default function LoginPage() {
               </span>
               {isLoading ? 'Anmeldung...' : 'Anmelden'}
             </button>
-          </div>
-
-          {/* Demo Accounts Info */}
-          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-blue-800 mb-2">Demo Login (für Test):</h3>
-            <div className="text-xs text-blue-700 space-y-1">
-              <div>Verwende: demo@company.com / demo123</div>
-              <div className="text-blue-600 mt-2"> Echte MongoDB Integration ist aktiv!</div>
-            </div>
           </div>
         </form>
       </div>
