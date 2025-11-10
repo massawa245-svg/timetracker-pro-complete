@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Calendar, Save, Send, Clock, Users, CheckCircle } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface DayPlan {
   start: string
@@ -22,6 +23,7 @@ interface WeeklyPlanData {
 }
 
 export default function ManagerSchedulePage() {
+  const { user } = useAuth()
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlanData>({
     monday: { start: '08:00', end: '17:00', pause: 45, hours: 8.25, enabled: true },
     tuesday: { start: '08:00', end: '17:00', pause: 45, hours: 8.25, enabled: true },
@@ -46,7 +48,6 @@ export default function ManagerSchedulePage() {
   }
 
   const calculateHours = (start: string, end: string, pause: number): number => {
-    //  SICHERER UMGANG MIT ZEIT-WERTEN
     if (!start || !end || start === '00:00' || end === '00:00') return 0
     
     try {
@@ -59,7 +60,7 @@ export default function ManagerSchedulePage() {
       
       return Math.round((totalMinutes / 60) * 100) / 100
     } catch (error) {
-      console.warn(' Error calculating hours:', { start, end, pause }, error)
+      console.warn('Error calculating hours:', error)
       return 0
     }
   }
@@ -72,13 +73,11 @@ export default function ManagerSchedulePage() {
       if (field === 'enabled') {
         dayPlan.enabled = value
         if (!value) {
-          // Wenn Tag deaktiviert wird, setze Standardwerte
           dayPlan.start = '00:00'
           dayPlan.end = '00:00'
           dayPlan.pause = 0
           dayPlan.hours = 0
         } else {
-          // Wenn Tag aktiviert wird, setze Standardwerte
           dayPlan.start = '08:00'
           dayPlan.end = '17:00'
           dayPlan.pause = 45
@@ -87,7 +86,6 @@ export default function ManagerSchedulePage() {
       } else {
         dayPlan[field] = value
         
-        // Automatisch Stunden berechnen wenn Start/Ende/Pause geändert wird
         if (['start', 'end', 'pause'].includes(field) && dayPlan.enabled) {
           dayPlan.hours = calculateHours(dayPlan.start, dayPlan.end, dayPlan.pause)
         }
@@ -106,22 +104,6 @@ export default function ManagerSchedulePage() {
     return Object.values(weeklyPlan).filter(day => day.enabled).length
   }
 
-  const formatTime = (time: string) => {
-    // ✅ SICHERER UMGANG MIT UNDEFINED/NULL WERTEN
-    if (!time || time === '00:00' || time === '00:00:00') return '12:00 AM'
-    
-    try {
-      const [hours, minutes] = time.split(':')
-      const hourNum = parseInt(hours)
-      const period = hourNum >= 12 ? 'PM' : 'AM'
-      const displayHour = hourNum % 12 || 12
-      return `${displayHour}:${minutes} ${period}`
-    } catch (error) {
-      console.warn(' Error formatting time:', time, error)
-      return '--:--'
-    }
-  }
-
   const publishWeeklyPlan = async () => {
     setIsLoading(true)
     setMessage('')
@@ -135,9 +117,9 @@ export default function ManagerSchedulePage() {
         body: JSON.stringify({
           weeklyPlan,
           publishedBy: {
-            userId: "manager-user-id",
-            name: "Manager",
-            email: "manager@company.com"
+            userId: user?.id || "manager-user-id",
+            name: user?.name || "Manager",
+            email: user?.email || "manager@company.com"
           }
         }),
       })
@@ -158,7 +140,6 @@ export default function ManagerSchedulePage() {
 
   const saveDraft = () => {
     setMessage(' Entwurf gespeichert (lokal)')
-    // Hier könnte man den Entwurf in localStorage speichern
   }
 
   return (

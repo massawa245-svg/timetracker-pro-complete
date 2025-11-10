@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Calendar, Users, BarChart3, Clock, Settings, FileText, Eye, CheckCircle } from 'lucide-react'
+import { Calendar, Users, BarChart3, Clock, Settings, FileText, Eye, CheckCircle, Crown } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function ManagerPage() {
+  const { user } = useAuth()
   const [stats, setStats] = useState({
     totalEmployees: 0,
     pendingRequests: 0,
@@ -83,12 +85,12 @@ export default function ManagerPage() {
                 Manager Dashboard
               </h1>
               <p className="text-xl text-gray-600">
-                Verwalten Sie Ihr Team und optimieren Sie die Arbeitsabläufe
+                Willkommen, {user?.name} - Verwalten Sie Ihr Team und optimieren Sie die Arbeitsabläufe
               </p>
             </div>
             <div className="flex items-center gap-3 bg-white rounded-2xl shadow-lg border border-gray-200 px-6 py-3">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="font-semibold text-gray-700">Online</span>
+              <Crown className="h-5 w-5 text-yellow-500" />
+              <span className="font-semibold text-gray-700">Manager Bereich</span>
             </div>
           </div>
         </div>
